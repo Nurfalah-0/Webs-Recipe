@@ -1,0 +1,1 @@
+"""SeGizi recipe application."""
