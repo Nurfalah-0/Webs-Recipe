@@ -5,6 +5,7 @@ from .views import (
     AdminUserViewSet,
     BookmarkViewSet,
     CategoryViewSet,
+    HealthView,
     IngredientViewSet,
     LoginView,
     RecipeIngredientViewSet,
@@ -30,6 +31,7 @@ router.register(
 router.register("steps", StepViewSet, basename="step")
 
 urlpatterns = [
+    path("health/", HealthView.as_view(), name="api-health"),
     path("auth/register/", RegisterView.as_view(), name="api-register"),
     path("auth/login/", LoginView.as_view(), name="api-login"),
     path("auth/logout/", LogoutView.as_view(), name="api-logout"),

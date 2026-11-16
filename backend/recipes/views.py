@@ -1,7 +1,9 @@
+import logging
 from uuid import uuid4
 
 from django.contrib.auth import authenticate, logout
 from django.contrib.auth.models import User
+from django.db import DatabaseError, connection
 from django.db.models import Q
 from django.utils.text import slugify
 from rest_framework import filters, permissions, status, viewsets
@@ -9,6 +11,7 @@ from rest_framework.authtoken.models import Token
 from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.filters import BaseFilterBackend
 from rest_framework.response import Response
+from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
 
 from .models import (
@@ -34,6 +37,8 @@ from .serializers import (
     StepSerializer,
 )
 
+logger = logging.getLogger(__name__)
+
 
 def is_recipe_creator(user):
     if not user or not user.is_authenticated:
@@ -42,6 +47,14 @@ def is_recipe_creator(user):
         return True
     profile = getattr(user, "profile", None)
     return bool(profile and profile.role == UserProfile.CREATOR)
+
+
+class LoginRateThrottle(AnonRateThrottle):
+    scope = "login"
+
+
+class RegisterRateThrottle(AnonRateThrottle):
+    scope = "register"
 
 
 class IsAdminOrReadOnly(permissions.BasePermission):
@@ -321,6 +334,7 @@ class StepViewSet(RecipeChildViewSet):
 class RegisterView(APIView):
     authentication_classes = []
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [RegisterRateThrottle]
 
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
@@ -339,6 +353,7 @@ class RegisterView(APIView):
 class LoginView(APIView):
     authentication_classes = []
     permission_classes = [permissions.AllowAny]
+    throttle_classes = [LoginRateThrottle]
 
     def post(self, request):
         username = request.data.get("username")
@@ -397,4 +412,21 @@ class AdminUserViewSet(viewsets.ModelViewSet):
                 {"detail": "The last active admin cannot be deleted."}
             )
         instance.delete()
+
+
+class HealthView(APIView):
+    authentication_classes = []
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT 1")
+        except DatabaseError:
+            logger.exception("Database health check failed")
+            return Response(
+                {"status": "unhealthy", "database": "unavailable"},
+                status=status.HTTP_503_SERVICE_UNAVAILABLE,
+            )
+        return Response({"status": "ok", "database": "ok"})
 

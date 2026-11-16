@@ -1,13 +1,22 @@
 from django.contrib.auth.models import User
+from django.core.cache import cache
 from django.test import TestCase
 from rest_framework.authtoken.models import Token
 from rest_framework.test import APIClient
 
-from .models import Category, Recipe, UserProfile
+from .models import (
+    Category,
+    Ingredient,
+    Recipe,
+    RecipeIngredient,
+    Step,
+    UserProfile,
+)
 
 
 class RecipeWorkflowAPITests(TestCase):
     def setUp(self):
+        cache.clear()
         self.admin = User.objects.create_user(
             username="admin",
             password="Admin_Test_Pass!42",
@@ -161,3 +170,42 @@ class RecipeWorkflowAPITests(TestCase):
         self.assertEqual(logout_response.status_code, 204)
         self.assertFalse(Token.objects.filter(user=member).exists())
         self.assertEqual(member_client.get("/api/bookmarks/").status_code, 401)
+
+    def test_health_endpoint_reports_database_status(self):
+        response = APIClient().get("/api/health/")
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            response.data,
+            {"status": "ok", "database": "ok"},
+        )
+
+    def test_recipe_list_query_count_is_bounded(self):
+        for number in range(3):
+            recipe = Recipe.objects.create(
+                author=self.admin,
+                category=self.category,
+                title=f"Recipe {number}",
+                slug=f"recipe-{number}",
+                description="Recipe for query test",
+                prep_time=10,
+                cook_time=20,
+                servings=2,
+                is_approved=True,
+            )
+            ingredient = Ingredient.objects.create(name=f"Ingredient {number}")
+            RecipeIngredient.objects.create(
+                recipe=recipe,
+                ingredient=ingredient,
+                quantity=1,
+                unit="cup",
+            )
+            Step.objects.create(
+                recipe=recipe,
+                step_number=1,
+                instruction="Mix the ingredients.",
+            )
+
+        with self.assertNumQueries(5):
+            response = APIClient().get("/api/recipes/")
+
+        self.assertEqual(response.data["count"], 3)

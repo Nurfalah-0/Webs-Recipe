@@ -4,6 +4,10 @@ venv/
 __pycache__/
 *.py[cod]
 *.sqlite3
+*.log
+.coverage
+backups/
+*.sql
 
 backend/media/
 backend/staticfiles/
