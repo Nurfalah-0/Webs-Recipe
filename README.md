@@ -10,26 +10,70 @@
 
 *A RESTful API engine for discovering, creating, bookmarking, and reviewing recipes with fine-grained role-based access control.*
 
+`20+` REST Endpoints &nbsp;·&nbsp; `8` Core Models &nbsp;·&nbsp; `4` Access Roles &nbsp;·&nbsp; `MySQL 8` Ready
+
 ---
 
 [Key Features](#-key-features) •
-[Repository Layout](#-repository-layout) •
+[Tech Stack](#-tech-stack) •
+[Architecture](#-architecture) •
 [Quick Start](#-quick-start) •
-[Environment Variables](#-environment-variables) •
+[Environment](#-environment-variables) •
+[Roles](#-accounts--roles) •
+[Auth Flow](#-authentication-flow) •
 [API Reference](#-api-reference) •
-[Developer Playbook](#-developer-playbook)
+[Playbook](#-developer-playbook)
 
 ---
 </div>
 
 ## 📌 Key Features
 
-- 🔐 **Role-Based Access Control (RBAC):** Distinct permissions for Guest, Member, Recipe Creator, and Admin users.
-- 📖 **Recipe Management:** Create, update, search, and filter recipes by title, ingredients, prep/cook time, and difficulty.
-- ⭐ **Community Engagement:** Bookmark recipes and write reviews/ratings.
-- 🛡️ **Security First:** Token-based authentication, CORS configuration, CSRF protection, and environment secret handling.
-- 💾 **Database Utilities:** Automated PowerShell backup & restore scripts with SHA-256 integrity verification.
-- 🧪 **Continuous Integration:** Automated GitHub Actions pipeline for linting, migration checks, unit tests, and security audits.
+| 🔐 **Role-Based Access Control** | 📖 **Recipe Management** |
+| :--- | :--- |
+| Distinct permissions for **Guest**, **Member**, **Recipe Creator**, and **Admin** users. | Create, update, search, and filter recipes by title, ingredients, prep/cook time, and difficulty. |
+| ⭐ **Community Engagement** | 🛡️ **Security First** |
+| Bookmark recipes and write reviews with 1–5 star ratings. | Token-based authentication, CORS, CSRF protection, and environment secret handling. |
+| 💾 **Database Utilities** | 🧪 **Continuous Integration** |
+| Automated PowerShell backup & restore scripts with SHA-256 integrity verification. | GitHub Actions pipeline for linting, migration checks, unit tests, and security audits. |
+
+---
+
+## 🧱 Tech Stack
+
+| Layer | Technology | Purpose |
+| :--- | :--- | :--- |
+| 🐍 **Framework** | [Django 5.2](https://www.djangoproject.com/) | Web framework, ORM & admin panel |
+| 🌐 **API** | [Django REST Framework](https://www.django-rest-framework.org/) | Serialization, filtering & browsable API |
+| 🐬 **Database** | [MySQL 8.0](https://www.mysql.com/) | Relational storage with `utf8mb4` support |
+| 🔑 **Authentication** | DRF Token Auth | Stateless token-based authentication |
+| ⚡ **Cache** | [Redis](https://redis.io/) + django-redis | Caching & API rate-limiting backend |
+| 📦 **Static Files** | [WhiteNoise](https://whitenoise.readthedocs.io/) | Efficient static file serving |
+| 🚀 **Server** | [Gunicorn](https://gunicorn.org/) | Production WSGI server |
+| 🔧 **Configuration** | [python-dotenv](https://pypi.org/project/python-dotenv/) | `.env` based secret management |
+
+---
+
+## 🧭 Architecture
+
+```text
+┌───────────────────────────────────────────────────────────┐
+│                          CLIENTS                          │
+│              Browser · Mobile · Postman · curl            │
+└─────────────────────────────┬─────────────────────────────┘
+                              │  HTTP + Authorization: Token
+                              ▼
+┌───────────────────────────────────────────────────────────┐
+│                    DJANGO 5.2 · DRF API                   │
+│      Views ─ Serializers ─ Permissions (RBAC) ─ Admin     │
+└────────┬────────────────────────────────────────────────┬─┘
+         │ ORM                                            │ cache
+         ▼                                                ▼
+┌─────────────────┐                            ┌─────────────────┐
+│   MySQL 8.0     │                            │  Redis (opt.)   │
+│   db_e-resep    │                            │ cache · limits  │
+└─────────────────┘                            └─────────────────┘
+```
 
 ---
 
@@ -65,7 +109,7 @@
 
 ### 🚀 Setup Steps
 
-#### 1. Activate or Create Virtual Environment
+#### 1️⃣ Activate or Create Virtual Environment
 
 **PowerShell:**
 ```powershell
@@ -82,13 +126,13 @@ py -m venv venv
 venv\Scripts\activate.bat
 ```
 
-#### 2. Install Dependencies
+#### 2️⃣ Install Dependencies
 
 ```powershell
 python -m pip install -r .\backend\requirements.txt
 ```
 
-#### 3. Environment Configuration
+#### 3️⃣ Environment Configuration
 
 Copy the template file to `.env`:
 
@@ -106,26 +150,28 @@ CREATE DATABASE `db_e-resep`
   COLLATE utf8mb4_unicode_ci;
 ```
 
-#### 4. Apply Migrations & Create Administrator
+#### 4️⃣ Apply Migrations & Create Administrator
 
 ```powershell
 python .\backend\manage.py migrate
 python .\backend\manage.py createsuperuser
 ```
 
-#### 5. Launch Development Server
+#### 5️⃣ Launch Development Server
 
 ```powershell
 python .\backend\manage.py runserver
 ```
 
-- 🌐 **API Root:** `http://127.0.0.1:8000/api/`
-- 🛠️ **Admin Panel:** `http://127.0.0.1:8000/admin/`
-- 🩺 **Health Check:** `http://127.0.0.1:8000/api/health/`
+| Service | URL |
+| :--- | :--- |
+| 🌐 **API Root** | `http://127.0.0.1:8000/api/` |
+| 🛠️ **Admin Panel** | `http://127.0.0.1:8000/admin/` |
+| 🩺 **Health Check** | `http://127.0.0.1:8000/api/health/` |
 
 ---
 
-## ⚙️ Environment Variables
+## 🔧 Environment Variables
 
 | Variable | Local Development | Production | Description |
 | :--- | :--- | :--- | :--- |
@@ -181,6 +227,15 @@ python .\backend\manage.py runserver
 
 ## 🔑 Authentication Flow
 
+```mermaid
+flowchart LR
+    A["📝 Register<br><i>POST /api/auth/register/</i>"] --> B["🔑 Token Issued"]
+    B --> C["🔓 Login<br><i>POST /api/auth/login/</i>"]
+    C --> D["🎫 Authenticated Requests<br><i>Authorization: Token …</i>"]
+    D --> E["🚪 Logout<br><i>POST /api/auth/logout/</i>"]
+    E --> F["🗑️ Token Invalidated"]
+```
+
 ### 1. Register Account
 
 - **Endpoint:** `POST /api/auth/register/`
@@ -219,10 +274,14 @@ Authorization: Token <your-auth-token>
 
 ---
 
-## 📖 Common API Actions
+## 📖 API Reference
 
-<details>
-<summary><b>1. Create a Recipe (Creator Role)</b></summary>
+<details open>
+<summary><b>Common API Actions</b></summary>
+
+<br>
+
+**1. Create a Recipe (Creator Role)**
 
 - **Endpoint:** `POST /api/recipes/`
 - **Headers:** `Authorization: Token <token>`
@@ -239,10 +298,8 @@ Authorization: Token <your-auth-token>
 }
 ```
 *Note: To attach an image, use `multipart/form-data`.*
-</details>
 
-<details>
-<summary><b>2. Bookmark a Recipe (Member Role)</b></summary>
+**2. Bookmark a Recipe (Member Role)**
 
 - **Endpoint:** `POST /api/bookmarks/`
 
@@ -251,10 +308,8 @@ Authorization: Token <your-auth-token>
   "recipe": 42
 }
 ```
-</details>
 
-<details>
-<summary><b>3. Review & Rate a Recipe (Member Role)</b></summary>
+**3. Review & Rate a Recipe (Member Role)**
 
 - **Endpoint:** `POST /api/reviews/`
 
@@ -265,13 +320,16 @@ Authorization: Token <your-auth-token>
   "comment": "Easy to follow and delicious."
 }
 ```
+
 </details>
 
 ---
 
-## 🗺️ API Route Directory
+### 🚦 Route Directory
 
 All routes are prefixed with `/api/`. Paginated lists default to 20 items per page.
+
+#### 🔐 Authentication & System
 
 | Route | Access | Purpose |
 | :--- | :--- | :--- |
@@ -281,15 +339,27 @@ All routes are prefixed with `/api/`. Paginated lists default to 20 items per pa
 | `/api/auth/register/` | Public | Register new user account |
 | `/api/auth/login/` | Public | Obtain authentication token |
 | `/api/auth/logout/` | Authenticated | Invalidate authentication token |
+
+#### 🍲 Recipes & Catalog
+
+| Route | Access | Purpose |
+| :--- | :--- | :--- |
 | `/api/recipes/` | Public Read / Auth Write | Search, list, and create recipes |
 | `/api/recipes/{id}/` | Public Read / Owner Write | View, update, or delete recipe |
 | `/api/categories/` | Public Read / Admin Write | List & manage recipe categories |
 | `/api/ingredients/` | Public Read / Admin Write | List & manage ingredient items |
-| `/api/bookmarks/` | Authenticated | List & manage user bookmarks |
-| `/api/reviews/` | Authenticated | Read & post recipe reviews |
 | `/api/recipe-ingredients/` | Creator / Admin | Manage ingredients list per recipe |
 | `/api/steps/` | Creator / Admin | Manage step-by-step instructions |
+
+#### ⭐ Community & Administration
+
+| Route | Access | Purpose |
+| :--- | :--- | :--- |
+| `/api/bookmarks/` | Authenticated | List & manage user bookmarks |
+| `/api/reviews/` | Authenticated | Read & post recipe reviews |
 | `/api/users/` | Admin | Manage user accounts and roles |
+
+---
 
 ### 🔍 Search & Filtering Examples
 
@@ -299,27 +369,27 @@ GET /api/recipes/?category=dinner&max_prep_time=30&ordering=-created_at
 GET /api/recipes/?difficulty=Mudah&min_cook_time=15
 ```
 
+| Parameter | Example | Description |
+| :--- | :--- | :--- |
+| `search` | `?search=chicken` | Search across recipe text fields |
+| `category` | `?category=dinner` | Filter by category |
+| `difficulty` | `?difficulty=Mudah` | `Mudah` · `Sedang` · `Sulit` |
+| `min_prep_time` / `max_prep_time` | `?max_prep_time=30` | Prep time range in minutes |
+| `min_cook_time` / `max_cook_time` | `?min_cook_time=15` | Cook time range in minutes |
+| `ordering` | `?ordering=-created_at` | Sort result (prefix `-` = descending) |
+
 ---
 
 ## 💻 Developer Playbook
 
 ### 🧪 Diagnostics & Testing
 
-Run verification commands:
-
-```powershell
-# System check
-python .\backend\manage.py check
-
-# Check pending migrations
-python .\backend\manage.py makemigrations --check --dry-run
-
-# Run test suite
-python .\backend\manage.py test recipes
-
-# Security verification (for production readiness)
-python .\backend\manage.py check --deploy
-```
+| Task | Command |
+| :--- | :--- |
+| 🩺 System check | `python .\backend\manage.py check` |
+| 🗃️ Pending migrations | `python .\backend\manage.py makemigrations --check --dry-run` |
+| 🧪 Run test suite | `python .\backend\manage.py test recipes` |
+| 🔒 Security verification (production readiness) | `python .\backend\manage.py check --deploy` |
 
 ---
 
@@ -348,5 +418,9 @@ PowerShell backup scripts with SHA-256 checksum validation:
 ---
 
 <div align="center">
-  <sub>Built with ❤️ for <b>SeGizi E-Recipes</b></sub>
+
+**🍲 SeGizi E-Recipes API** — Built with ❤️ for SeGizi E-Recipes
+
+[⬆ Back to Top](#-segizi-e-recipes-api)
+
 </div>
