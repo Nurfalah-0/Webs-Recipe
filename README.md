@@ -269,6 +269,9 @@ page by default).
 
 | Route | Access | Purpose |
 | --- | --- | --- |
+| `/` | Public | SeGizi API landing page |
+| `/login/` | Public | Browser form for token authentication |
+| `/favicon.ico` | Public | SeGizi browser icon |
 | `/api/recipes/` | Public read; Creator/Admin write | Search, list, create, and filter recipes |
 | `/api/recipes/{id}/` | Public read for approved recipes; Creator owner/Admin write | View or manage a recipe |
 | `/api/categories/` | Public read; Admin write | Browse and manage recipe categories |

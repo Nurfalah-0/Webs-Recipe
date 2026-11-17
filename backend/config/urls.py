@@ -19,7 +19,12 @@ from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import include, path
 
+from .views import favicon, home, login_page
+
 urlpatterns = [
+    path('', home, name='home'),
+    path('login/', login_page, name='login-page'),
+    path('favicon.ico', favicon, name='favicon'),
     path('admin/', admin.site.urls),
     path('api/', include('recipes.urls')),
     path('api-auth/', include('rest_framework.urls')),

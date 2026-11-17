@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="SeGizi recipe sharing API">
+  <link rel="icon" href="/favicon.ico">
+  <title>SeGizi API</title>
+  <style>
+    :root { color-scheme: light; font-family: system-ui, sans-serif; color: #20302a; background: #f4f8f5; }
+    body { margin: 0; min-height: 100vh; display: grid; place-items: center; }
+    main { box-sizing: border-box; width: min(42rem, calc(100% - 2rem)); padding: 2.5rem; border-radius: 1rem; background: white; box-shadow: 0 1rem 3rem #183b2814; }
+    h1 { margin-top: 0; color: #198754; }
+    ul { padding-left: 1.25rem; line-height: 2; }
+    a { color: #146c43; }
+    code { padding: .15rem .35rem; border-radius: .25rem; background: #eef5f0; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>SeGizi</h1>
+    <p>The recipe API is running. Choose an endpoint to explore:</p>
+    <ul>
+      <li><a href="/api/">Browsable API index</a></li>
+      <li><a href="/api/health/">API and database health</a></li>
+      <li><a href="/admin/">Django administration</a></li>
+      <li><a href="/login/">Token login page</a></li>
+    </ul>
+    <p>API clients can authenticate with <code>POST /api/auth/login/</code> and send
+      the returned token as <code>Authorization: Token &lt;token&gt;</code>.</p>
+  </main>
+</body>
+</html>
