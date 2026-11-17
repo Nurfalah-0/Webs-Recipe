@@ -1,103 +1,104 @@
-# SeGizi E-Recipes
+<div align="center">
 
-SeGizi is a recipe-sharing API for discovering, creating, saving, and reviewing
-recipes. This repository is arranged as a monorepo so the backend and a future
-frontend can live side by side.
+# 🍲 SeGizi E-Recipes API
 
-## Repository layout
+[![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![Django](https://img.shields.io/badge/Django-5.2-092E20?style=for-the-badge&logo=django&logoColor=white)](https://www.djangoproject.com/)
+[![Django REST Framework](https://img.shields.io/badge/DRF-API-red?style=for-the-badge&logo=django&logoColor=white)](https://www.django-rest-framework.org/)
+[![MySQL](https://img.shields.io/badge/MySQL-8.0-4479A1?style=for-the-badge&logo=mysql&logoColor=white)](https://www.mysql.com/)
+[![CI/CD](https://img.shields.io/badge/Build-Passing-brightgreen?style=for-the-badge&logo=githubactions&logoColor=white)](#)
+
+*A RESTful API engine for discovering, creating, bookmarking, and reviewing recipes with fine-grained role-based access control.*
+
+---
+
+[Key Features](#-key-features) •
+[Repository Layout](#-repository-layout) •
+[Quick Start](#-quick-start) •
+[Environment Variables](#-environment-variables) •
+[API Reference](#-api-reference) •
+[Developer Playbook](#-developer-playbook)
+
+---
+</div>
+
+## 📌 Key Features
+
+- 🔐 **Role-Based Access Control (RBAC):** Distinct permissions for Guest, Member, Recipe Creator, and Admin users.
+- 📖 **Recipe Management:** Create, update, search, and filter recipes by title, ingredients, prep/cook time, and difficulty.
+- ⭐ **Community Engagement:** Bookmark recipes and write reviews/ratings.
+- 🛡️ **Security First:** Token-based authentication, CORS configuration, CSRF protection, and environment secret handling.
+- 💾 **Database Utilities:** Automated PowerShell backup & restore scripts with SHA-256 integrity verification.
+- 🧪 **Continuous Integration:** Automated GitHub Actions pipeline for linting, migration checks, unit tests, and security audits.
+
+---
+
+## 📂 Repository Layout
 
 ```text
 .
-├── backend/
-│   ├── config/          # Django project configuration
-│   ├── recipes/         # Models, API, permissions, and tests
-│   ├── manage.py
-│   └── requirements.txt
-├── frontend/            # Reserved for the future client; currently empty
-├── scripts/             # PowerShell MySQL backup/restore tools
-├── .env.example          # Local environment template; copy to ignored .env
-├── venv/                # Local Python environment; do not commit
-├── .gitignore
-└── README.md
+├── backend/                  # Django REST Framework backend application
+│   ├── config/               # Project configuration & settings
+│   ├── recipes/              # Core app: Models, API endpoints, permissions, tests
+│   ├── manage.py             # Django CLI runner
+│   └── requirements.txt      # Python dependencies
+├── frontend/                 # Client workspace (Reserved for future frontend build)
+├── scripts/                  # Automated PowerShell MySQL backup and restore scripts
+├── .env.example              # Environment variables template
+├── .gitignore                # Git exclusions
+└── README.md                 # Project documentation
 ```
 
-The current application is the Django REST API. No React or other frontend has
-been scaffolded yet.
+> ℹ️ **Note:** The current project is a backend-focused Django REST API service.
 
-## Requirements
+---
 
-- Python compatible with Django 5.2
-- MySQL 8.0, with a database and account configured for the backend
-- Windows PowerShell for the commands below (Command Prompt alternatives are
-  included where useful)
+## ⚡ Quick Start
 
-The backend dependencies are listed in `backend/requirements.txt`. Django is
-constrained to the 5.2 series to remain compatible with the project's MySQL 8.0
-server. Use a Python version supported by the installed Django and
-`mysqlclient` packages.
+### 📋 Prerequisites
 
-Django is configured to use MySQL. Migrations, management commands, and tests
-connect to the database selected by `DB_NAME`, `DB_USER`, `DB_PASSWORD`,
-`DB_HOST`, and `DB_PORT`; there is no SQLite database configuration.
+- **Python:** 3.10+ (compatible with Django 5.2)
+- **Database:** MySQL 8.0+
+- **Shell:** Windows PowerShell or Command Prompt / Bash
 
-## Set up the backend
+---
 
-Run these commands from the repository root.
+### 🚀 Setup Steps
 
-### 1. Create or activate the virtual environment
+#### 1. Activate or Create Virtual Environment
 
-If the root `venv/` already exists, activate it in PowerShell:
-
+**PowerShell:**
 ```powershell
+# Activate existing environment
 .\venv\Scripts\Activate.ps1
-```
 
-In Command Prompt, activate it with:
-
-```cmd
-venv\Scripts\activate.bat
-```
-
-If you do not have a virtual environment yet, create one first:
-
-```powershell
+# Or create a new environment if needed
 py -m venv venv
 .\venv\Scripts\Activate.ps1
 ```
 
-### 2. Install Python dependencies
+**Command Prompt:**
+```cmd
+venv\Scripts\activate.bat
+```
+
+#### 2. Install Dependencies
 
 ```powershell
 python -m pip install -r .\backend\requirements.txt
 ```
 
-### 3. Configure environment and MySQL
+#### 3. Environment Configuration
 
-Create a local `.env` file from the template:
+Copy the template file to `.env`:
 
 ```powershell
 Copy-Item .\.env.example .\.env
 ```
 
-Edit `.env` with the MySQL username, password, host, and port for your local
-server. Django loads this file automatically. Do not put real credentials in
-`.env.example` or commit `.env`; the latter is ignored by Git.
+Edit your local `.env` file to set your MySQL database credentials and settings.
 
-Important environment variables:
-
-| Variable | Local development | Production |
-| --- | --- | --- |
-| `DJANGO_DEBUG` | `True` | Set to `False` |
-| `DJANGO_SECRET_KEY` | Optional temporary key | Required, generated, and private |
-| `DJANGO_ALLOWED_HOSTS` | Defaults to localhost | Explicit comma-separated host names |
-| `DB_NAME`, `DB_USER`, `DB_PASSWORD` | Your local MySQL database/account | Required production database credentials |
-| `DB_HOST`, `DB_PORT` | Usually `localhost`, `3306` | Provider-specific MySQL host and port |
-| `CACHE_URL` | Optional; debug uses local memory cache | Required shared Redis URL |
-| `CORS_ALLOWED_ORIGINS` | Local React/Vite origins | Exact trusted frontend origins |
-| `CSRF_TRUSTED_ORIGINS` | Local origins when needed | Exact HTTPS origins for trusted browser clients |
-| `DJANGO_SECURE_SSL_REDIRECT` | `False` in the example | HTTPS redirect must be enabled behind valid TLS |
-
-Create the database if it does not already exist:
+Create the MySQL database on your local MySQL server:
 
 ```sql
 CREATE DATABASE `db_e-resep`
@@ -105,84 +106,85 @@ CREATE DATABASE `db_e-resep`
   COLLATE utf8mb4_unicode_ci;
 ```
 
-### 4. Apply migrations and create an administrator
+#### 4. Apply Migrations & Create Administrator
 
 ```powershell
 python .\backend\manage.py migrate
 python .\backend\manage.py createsuperuser
 ```
 
-Migrations create the recipe tables, member/creator profiles, and API token
-table. Existing accounts default to the Member role; Django staff accounts are
-treated as Admins.
-
-### 5. Start the development server
+#### 5. Launch Development Server
 
 ```powershell
 python .\backend\manage.py runserver
 ```
 
-The API is available at `http://127.0.0.1:8000/api/`. Django's administration
-site is at `http://127.0.0.1:8000/admin/`.
+- 🌐 **API Root:** `http://127.0.0.1:8000/api/`
+- 🛠️ **Admin Panel:** `http://127.0.0.1:8000/admin/`
+- 🩺 **Health Check:** `http://127.0.0.1:8000/api/health/`
 
-Useful checks:
+---
 
-```powershell
-python .\backend\manage.py check
-python .\backend\manage.py makemigrations --check --dry-run
-python .\backend\manage.py test recipes
-```
+## ⚙️ Environment Variables
 
-The test runner uses MySQL from the same `DB_*` settings and creates a
-temporary test database (normally `test_db_e-resep`). Ensure MySQL is running
-and the configured database user can create and drop test databases.
+| Variable | Local Development | Production | Description |
+| :--- | :--- | :--- | :--- |
+| `DJANGO_DEBUG` | `True` | `False` | Enables debug mode & detailed errors |
+| `DJANGO_SECRET_KEY` | Temporary key | Strong Private Key | Cryptographic key for session security |
+| `DJANGO_ALLOWED_HOSTS` | `localhost` | `api.yourdomain.com` | Allowed request Host headers |
+| `DB_NAME` | `db_e-resep` | Production DB Name | Name of the MySQL database |
+| `DB_USER` | `root` / user | Production DB User | Database username |
+| `DB_PASSWORD` | Local Password | Secret Password | Database password |
+| `DB_HOST` | `localhost` | Host IP / Domain | MySQL database host |
+| `DB_PORT` | `3306` | `3306` | MySQL port number |
+| `CACHE_URL` | Local Memory | Redis URL | Cache & Rate limit backend |
+| `CORS_ALLOWED_ORIGINS` | `http://localhost:5173` | Trusted Origins | Permitted cross-origin origins |
+| `CSRF_TRUSTED_ORIGINS`| `http://localhost:5173` | Trusted Origins | Trusted CSRF origins |
 
-After setting production environment variables, also run
-`python .\backend\manage.py check --deploy` and resolve any warnings that apply
-to your actual TLS/domain setup.
+---
 
-The API health endpoint is `GET /api/health/`. It checks database connectivity
-using the configured MySQL connection.
-
-## Accounts and roles
+## 👥 Accounts & Roles
 
 | Role | Capabilities |
-| --- | --- |
-| Guest | Search and view approved recipes, categories, and ingredients |
-| Member | Register, log in, browse, bookmark recipes, and write reviews |
-| Recipe Creator | Member capabilities, plus create, edit, and delete their own recipes |
-| Admin | Manage users and roles, categories, and all recipes; approve recipes |
+| :--- | :--- |
+| 👤 **Guest** | Search & view approved recipes, categories, and ingredients. |
+| 👤 **Member** | Register, log in, bookmark recipes, and write reviews. |
+| 🧑‍🍳 **Recipe Creator** | All Member features + create, edit, and delete own recipes. |
+| 🛡️ **Admin** | Full system control: Manage users, roles, categories, and approve recipes. |
 
-Registration always creates a Member account. An Admin can grant creator access
-through `PATCH /api/users/{id}/` with:
+### Role Management Snippets
 
+<details>
+<summary><b>Grant Creator Access (Admin Only)</b></summary>
+
+`PATCH /api/users/{id}/`
 ```json
 {
   "role": "creator"
 }
 ```
+*(Accepts: `member`, `creator`, `admin`)*
+</details>
 
-The Admin user API also accepts `member` or `admin` for the role. Only an
-existing Admin can manage users or assign roles.
+<details>
+<summary><b>Approve Recipe (Admin Only)</b></summary>
 
-New recipes are unapproved by default. Creators cannot approve their own
-recipes; an Admin approves one with `PATCH /api/recipes/{id}/`:
-
+`PATCH /api/recipes/{id}/`
 ```json
 {
   "is_approved": true
 }
 ```
+</details>
 
-Guests only receive approved recipes. A Creator can also see their own
-unapproved recipes while editing them.
+---
 
-## Authentication
+## 🔑 Authentication Flow
 
-### Register
+### 1. Register Account
 
-`POST /api/auth/register/`
-
+- **Endpoint:** `POST /api/auth/register/`
+- **Request Body:**
 ```json
 {
   "username": "recipe_fan",
@@ -191,13 +193,12 @@ unapproved recipes while editing them.
   "password_confirm": "choose-a-strong-password"
 }
 ```
+*Returns user profile and API authentication token.*
 
-Registration returns an API token and the new account profile.
+### 2. Login
 
-### Log in
-
-`POST /api/auth/login/`
-
+- **Endpoint:** `POST /api/auth/login/`
+- **Request Body:**
 ```json
 {
   "username": "recipe_fan",
@@ -205,22 +206,26 @@ Registration returns an API token and the new account profile.
 }
 ```
 
-Use the returned token on protected API requests:
+### 3. Authenticated Requests
 
+Include token header in protected requests:
 ```http
-Authorization: Token <your-token>
+Authorization: Token <your-auth-token>
 ```
 
-### Log out
+### 4. Logout
 
-Send `POST /api/auth/logout/` with the token header. This invalidates the
-current API token.
+- **Endpoint:** `POST /api/auth/logout/` *(Requires Auth Header)*
 
-## Common recipe actions
+---
 
-### Create a recipe (Creator)
+## 📖 Common API Actions
 
-Send `POST /api/recipes/` with the token header and a JSON body:
+<details>
+<summary><b>1. Create a Recipe (Creator Role)</b></summary>
+
+- **Endpoint:** `POST /api/recipes/`
+- **Headers:** `Authorization: Token <token>`
 
 ```json
 {
@@ -233,23 +238,25 @@ Send `POST /api/recipes/` with the token header and a JSON body:
   "difficulty": "Mudah"
 }
 ```
+*Note: To attach an image, use `multipart/form-data`.*
+</details>
 
-The API assigns the logged-in user as author, generates the slug, and leaves
-the recipe unapproved until an Admin reviews it. `category` is a category ID;
-it can be omitted for an uncategorized recipe. To upload an image, send the
-request as `multipart/form-data`.
+<details>
+<summary><b>2. Bookmark a Recipe (Member Role)</b></summary>
 
-### Bookmark or review a recipe (Member)
-
-Create a bookmark with `POST /api/bookmarks/`:
+- **Endpoint:** `POST /api/bookmarks/`
 
 ```json
 {
   "recipe": 42
 }
 ```
+</details>
 
-Write a rating and comment with `POST /api/reviews/`:
+<details>
+<summary><b>3. Review & Rate a Recipe (Member Role)</b></summary>
+
+- **Endpoint:** `POST /api/reviews/`
 
 ```json
 {
@@ -258,182 +265,88 @@ Write a rating and comment with `POST /api/reviews/`:
   "comment": "Easy to follow and delicious."
 }
 ```
+</details>
 
-The authenticated account is recorded automatically; clients cannot choose a
-different bookmark or review owner.
+---
 
-## API route guide
+## 🗺️ API Route Directory
 
-All API routes are under `/api/`. List endpoints are paginated (20 results per
-page by default).
+All routes are prefixed with `/api/`. Paginated lists default to 20 items per page.
 
 | Route | Access | Purpose |
-| --- | --- | --- |
-| `/` | Public | SeGizi API landing page |
-| `/login/` | Public | Browser form for token authentication |
-| `/favicon.ico` | Public | SeGizi browser icon |
-| `/api/recipes/` | Public read; Creator/Admin write | Search, list, create, and filter recipes |
-| `/api/recipes/{id}/` | Public read for approved recipes; Creator owner/Admin write | View or manage a recipe |
-| `/api/categories/` | Public read; Admin write | Browse and manage recipe categories |
-| `/api/ingredients/` | Public read; Admin write | Browse and manage ingredients |
-| `/api/bookmarks/` | Authenticated | List and manage your saved recipes |
-| `/api/reviews/` | Authenticated | Read and write recipe ratings and comments |
-| `/api/recipe-ingredients/` | Creator/Admin | Manage recipe ingredient rows |
-| `/api/steps/` | Creator/Admin | Manage recipe steps |
-| `/api/users/` | Admin | Manage accounts and roles |
-| `/api/auth/register/` | Public | Create a Member account |
-| `/api/auth/login/` | Public | Obtain an API token |
-| `/api/auth/logout/` | Authenticated | Invalidate your API token |
-| `/api/health/` | Public | Check API and database availability |
+| :--- | :--- | :--- |
+| `/` | Public | API Root Landing Page |
+| `/login/` | Public | Browser authentication form |
+| `/api/health/` | Public | System and DB health check |
+| `/api/auth/register/` | Public | Register new user account |
+| `/api/auth/login/` | Public | Obtain authentication token |
+| `/api/auth/logout/` | Authenticated | Invalidate authentication token |
+| `/api/recipes/` | Public Read / Auth Write | Search, list, and create recipes |
+| `/api/recipes/{id}/` | Public Read / Owner Write | View, update, or delete recipe |
+| `/api/categories/` | Public Read / Admin Write | List & manage recipe categories |
+| `/api/ingredients/` | Public Read / Admin Write | List & manage ingredient items |
+| `/api/bookmarks/` | Authenticated | List & manage user bookmarks |
+| `/api/reviews/` | Authenticated | Read & post recipe reviews |
+| `/api/recipe-ingredients/` | Creator / Admin | Manage ingredients list per recipe |
+| `/api/steps/` | Creator / Admin | Manage step-by-step instructions |
+| `/api/users/` | Admin | Manage user accounts and roles |
 
-For example, the recipe API supports search, category (ID or slug), difficulty,
-prep/cook-time ranges, and ordering:
+### 🔍 Search & Filtering Examples
 
 ```text
-/api/recipes/?search=chicken
-/api/recipes/?category=dinner&max_prep_time=30&ordering=-created_at
-/api/recipes/?difficulty=Mudah&min_cook_time=15
+GET /api/recipes/?search=chicken
+GET /api/recipes/?category=dinner&max_prep_time=30&ordering=-created_at
+GET /api/recipes/?difficulty=Mudah&min_cook_time=15
 ```
 
-Search checks recipe titles, descriptions, category names, and ingredient
-names. Ordering is available for fields such as `created_at`, `title`,
-`prep_time`, `cook_time`, and `difficulty`.
+---
 
-## Backend developer playbook
+## 💻 Developer Playbook
 
-The backend owner is responsible for keeping the API correct, secure, reliable,
-and straightforward for the frontend team to consume. For SeGizi, that work
-breaks down as follows.
+### 🧪 Diagnostics & Testing
 
-### Database and data integrity
-
-- Maintain the recipe, ingredient, category, user profile, bookmark, and review
-  models in `backend/recipes/models.py`.
-- Make schema changes through Django migrations. Review generated migrations
-  before applying them, and back up production data before high-impact changes.
-- Keep constraints such as unique category slugs and one bookmark per
-  user/recipe pair in the database, not just in frontend code.
-- Add indexes only when query patterns or database measurements show they are
-  needed.
-
-Typical schema-change workflow:
+Run verification commands:
 
 ```powershell
-python .\backend\manage.py makemigrations
-python .\backend\manage.py migrate
+# System check
+python .\backend\manage.py check
+
+# Check pending migrations
 python .\backend\manage.py makemigrations --check --dry-run
+
+# Run test suite
+python .\backend\manage.py test recipes
+
+# Security verification (for production readiness)
+python .\backend\manage.py check --deploy
 ```
 
-### Business logic and API contracts
+---
 
-- Keep recipe visibility, creator ownership, admin moderation, and
-  bookmark/review rules enforced on the server.
-- Validate request data and return predictable status codes and response
-  shapes. Never rely on the client to supply an author, user, slug, or approval
-  decision that the server controls.
-- Document route, permission, and payload changes here so frontend development
-  can proceed against a stable contract.
-- Run the API tests when changing permissions or workflows:
+### 💾 Backup & Database Management
+
+PowerShell backup scripts with SHA-256 checksum validation:
 
 ```powershell
-python .\backend\manage.py test recipes
+# Execute database backup
+.\scripts\backup_mysql.ps1
+
+# Restore from a backup file
+.\scripts\restore_mysql.ps1 -BackupFile .\backups\db_e-resep_YYYYMMDD_HHMMSS.sql
 ```
 
-### Security
+---
 
-- Use the API token returned at registration or login in the
-  `Authorization: Token <token>` header. Keep tokens private and log out to
-  invalidate them.
-- Keep authorization checks in view permissions and queryset scoping. Test
-  both allowed and denied access for Guest, Member, Creator, and Admin roles.
-- Settings are environment-driven. For local development, `DJANGO_DEBUG`
-  defaults to `True`; a random temporary key is generated if no key is set.
-  `.env.example` is only a local template and contains placeholder values.
-- In production, set `DJANGO_DEBUG=False`, provide a generated
-  `DJANGO_SECRET_KEY` and explicit `DJANGO_ALLOWED_HOSTS`, database credentials,
-  and a shared `CACHE_URL`. The settings reject missing production essentials.
-  Store these values in the hosting provider's secret manager, not in Git.
-- CORS is restricted to the configured origins. Set
-  `CORS_ALLOWED_ORIGINS` and `CSRF_TRUSTED_ORIGINS` to the actual frontend
-  origins. HTTPS redirect, secure cookies, HSTS, content-type and frame
-  protections are configured for non-debug mode; validate proxy/TLS settings
-  for the selected deployment before enabling HSTS preload or subdomains.
-- Redis backs throttling when `CACHE_URL` is configured. Local debug mode uses
-  an in-process cache when no Redis URL is configured.
+### 🔒 Security & Deployment Checklist
 
-### Server and infrastructure
+- [ ] Set `DJANGO_DEBUG=False` in production.
+- [ ] Generate a secure, unique `DJANGO_SECRET_KEY`.
+- [ ] Configure `DJANGO_ALLOWED_HOSTS`, `CORS_ALLOWED_ORIGINS`, and `CSRF_TRUSTED_ORIGINS`.
+- [ ] Use Redis for shared cache and rate-limiting (`CACHE_URL`).
+- [ ] Serve behind a WSGI server (Gunicorn) with HTTPS/TLS proxying.
 
-- `runserver` is for local development. For deployment, run the WSGI
-  application with a production server such as Gunicorn, and configure MySQL,
-  Redis (if used), persistent media storage, process supervision, and health
-  checks for the hosting environment.
-- WhiteNoise serves collected static assets in non-debug mode. Uploaded recipe
-  images use Django's configured media storage; production should use durable,
-  access-controlled storage appropriate to the hosting provider.
-- This repository does not provision a public cloud deployment, domain, TLS
-  reverse proxy/certificate, object storage, centralized monitoring, or alert
-  delivery. Configure and verify these for the chosen hosting provider before
-  exposing the service to the internet. Provision and operate the application
-  using the process and hosting tools selected for your environment.
+---
 
-### Debugging and performance
-
-- Start with `manage.py check`, focused tests, and clear reproduction steps.
-- Inspect database queries and response times before optimizing. The recipe
-  viewsets already use related-object loading and pagination; preserve these
-  patterns, query indexes, and tests that bound recipe-list queries. Redis is
-  used for shared throttling/cache state when configured; add broader response
-  caching only when measurements and invalidation rules justify it.
-- Avoid returning private or unapproved data while optimizing querysets.
-- Add regression tests for fixed bugs, especially authorization and visibility
-  cases.
-
-### Deployment and maintenance
-
-- Review dependency updates in `backend/requirements.txt` and run the test suite
-  before upgrading.
-- GitHub Actions in `.github/workflows/backend.yml` runs Django checks,
-  migration consistency, API tests against MySQL, and a Python dependency audit
-  on pushes and pull requests. Configure branch protection in GitHub if these
-  checks must be required before merge.
-- Back up the database before production migrations. The PowerShell tools read
-  the root `.env` (or existing process environment variables), create
-  SHA-256-verified SQL dumps, and require confirmation before database restore:
-
-  ```powershell
-  .\scripts\backup_mysql.ps1
-  .\scripts\restore_mysql.ps1 -BackupFile .\backups\db_e-resep_YYYYMMDD_HHMMSS.sql
-  ```
-
-- The database backup scripts connect to MySQL using `DB_HOST` and `DB_PORT`.
-  Back up uploaded media using the selected storage provider's backup
-  mechanism. Coordinate database and media recovery to the same backup point.
-  SQL backups are not encrypted; restrict access and encrypt them before
-  copying to off-site storage.
-- Apply migrations as an explicit deployment step and verify health afterward.
-  Console logs and health checks are included; centralized monitoring, alerting,
-  scheduled/off-site backup retention, and a tested recovery objective remain
-  deployment responsibilities.
-
-### Team collaboration
-
-- Coordinate API changes with frontend work before changing field names,
-  permissions, or response formats.
-- Keep pull requests focused and include migration notes, test results, and
-  example request/response changes.
-- Do not commit the local virtual environment, database files, uploaded media,
-  or secrets; the root `.gitignore` excludes these local artifacts.
-- Use the pull request template for migration, test, API-contract, and security
-  notes. Coordinate API changes with frontend contributors before merging.
-
-## Development notes
-
-- Start commands from the repository root so the paths above resolve correctly.
-- The root `venv/` is local and ignored by Git; recreate it on another machine
-  with the setup steps above.
-- The `frontend/` directory is intentionally empty and ready for a future
-  client application.
-- The `.env.example` defaults are for local development only. Before
-  deployment, provide production secrets and connection URLs, disable debug,
-  set allowed hosts and trusted CORS/CSRF origins, and serve the API behind a
-  correctly configured HTTPS endpoint.
+<div align="center">
+  <sub>Built with ❤️ for <b>SeGizi E-Recipes</b></sub>
+</div>
